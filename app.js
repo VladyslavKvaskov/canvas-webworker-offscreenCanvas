@@ -29,7 +29,7 @@ if (typeof canvas.transferControlToOffscreen === "function") {
     }, 100);
   }
 } else {
-  let ctx = null;
+  var ctx = null;
 
   function getRandomColor() {
     const letters = '0123456789ABCDEF';
@@ -41,8 +41,8 @@ if (typeof canvas.transferControlToOffscreen === "function") {
   }
 
 
-  let data = [];
-  let dataLength = 5001;
+  var data = [];
+  var dataLength = 5001;
 
   for (let i = 1; i <= dataLength; i++) {
     data.push({
