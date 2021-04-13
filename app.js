@@ -29,7 +29,6 @@ if (typeof canvas.transferControlToOffscreen === "function") {
     }, 100);
   }
 } else {
-  console.log(123);
   let ctx = null;
 
   function getRandomColor() {
