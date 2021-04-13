@@ -12,7 +12,7 @@ function getRandomColor() {
 
 
 let data = [];
-let dataLength = 500000;
+let dataLength = 5001;
 
 for (let i = 1; i <= dataLength; i++) {
   data.push({
@@ -46,21 +46,28 @@ self.onmessage = function(e) {
 
 function draw() {
   if (data.length > 0) {
-    const squareSize = Math.sqrt((canvas.width * canvas.height) / dataLength);
+    ctx.font = '16px Verdana';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#000';
+    ctx.fillText('head', canvas.width / 2 - 20, 15);
+
+    const squareSize = Math.sqrt((canvas.width * (canvas.height - 20)) / dataLength);
     const rowLength = Math.floor(canvas.width / squareSize);
     const rowCounter = Math.ceil(data.length / rowLength);
     const squareWidth = squareSize + ((canvas.width - rowLength * squareSize) / rowLength);
-    const squareHeight = squareSize + ((canvas.height - rowCounter * squareSize) / rowCounter);
+    const squareHeight = squareSize + (((canvas.height - 20) - rowCounter * squareSize) / rowCounter);
 
     let count = 0;
     let x = 0;
-    let y = 0;
+    let y = 20;
 
     for (let i = 0; i < data.length; i++) {
       const d = data[i];
-      ctx.beginPath();
-      ctx.fillStyle = d.bgcolor;
+      ctx.fillStyle = '#fff';
       ctx.fillRect(x, y, squareWidth, squareHeight);
+      ctx.fillStyle = d.bgcolor;
+      ctx.fillRect(x + squareWidth * 0.1, y + squareHeight * 0.1, squareWidth - squareWidth * 0.2, squareHeight - squareHeight * 0.2);
+      // ctx.fillRect(x + 0.75, y + 0.75, squareWidth - 1.5, squareHeight - 1.5);
 
       count++;
       if (count === rowLength) {
@@ -80,3 +87,5 @@ function draw() {
     ctx.fillText('No data!', canvas.width / 2, canvas.height / 2);
   }
 }
+
+// ctx.fillRect(x + squareWidth * 0.1, y + squareHeight * 0.1, squareWidth - squareWidth * 0.2, squareHeight - squareHeight * 0.2);
