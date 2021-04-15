@@ -1,7 +1,7 @@
 const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
 let timeout;
-// canvas.transferControlToOffscreen = '123';
+canvas.transferControlToOffscreen = '123';
 if (typeof canvas.transferControlToOffscreen === "function") {
   const wCanvas = canvas.transferControlToOffscreen();
   const worker = new Worker('worker.js');
@@ -67,7 +67,7 @@ if (typeof canvas.transferControlToOffscreen === "function") {
 
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  draw();
+  draw(true);
 
   window.onresize = () => {
     canvas.width = window.innerWidth;
@@ -78,7 +78,8 @@ if (typeof canvas.transferControlToOffscreen === "function") {
     draw();
   }
 
-  function draw() {
+
+  function draw(par = false) {
     if (data.length > 0) {
       const squareSize = Math.sqrt((canvas.width * (canvas.height)) / dataLength);
       const rowLength = Math.floor(canvas.width / squareSize);
@@ -92,10 +93,12 @@ if (typeof canvas.transferControlToOffscreen === "function") {
 
       for (let i = 0; i < data.length; i++) {
         const d = data[i];
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(x, y, squareWidth, squareHeight);
-        ctx.fillStyle = d.bgcolor;
-        ctx.fillRect(x + squareWidth * 0.1, y + squareHeight * 0.1, squareWidth - squareWidth * 0.2, squareHeight - squareHeight * 0.2);
+        if (!d.target) {
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(x, y, squareWidth, squareHeight);
+          ctx.fillStyle = d.bgcolor;
+          ctx.fillRect(x + squareWidth * 0.1, y + squareHeight * 0.1, squareWidth - squareWidth * 0.2, squareHeight - squareHeight * 0.2);
+        }
 
         d.x = x + squareWidth * 0.1;
         d.y = y + squareHeight * 0.1;
@@ -108,6 +111,15 @@ if (typeof canvas.transferControlToOffscreen === "function") {
         d.marginX = squareWidth * 0.1;
         d.marginY = squareHeight * 0.1;
 
+        if (d.target) {
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(x, y, squareWidth, squareHeight);
+          ctx.beginPath();
+          ctx.fillStyle = 'red';
+          ctx.arc(d.x + d.width / 2, d.y + d.height / 2, Math.min(d.width, d.height) / 4, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+
         count++;
         if (count === rowLength) {
           count = 0;
@@ -118,8 +130,9 @@ if (typeof canvas.transferControlToOffscreen === "function") {
         }
       }
 
-
-      eatRandom(true);
+      if (par === true) {
+        eatRandom(true);
+      }
     } else {
       ctx.fillStyle = '#fff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -132,10 +145,17 @@ if (typeof canvas.transferControlToOffscreen === "function") {
 
   function eat(d) {
     if (d) {
+      d.target = true;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(d.containerX, d.containerY, d.containerWidth, d.containerHeight);
+
+      ctx.beginPath();
+      ctx.fillStyle = 'red';
+      ctx.arc(d.x + d.width / 2, d.y + d.height / 2, Math.min(d.width, d.height) / 4, 0, 2 * Math.PI);
+      ctx.fill();
+
+
       async function moveBug() {
-
-        d.eaten = true;
-
         function drawBug() {
 
           let arr = data.filter(g =>
@@ -146,10 +166,12 @@ if (typeof canvas.transferControlToOffscreen === "function") {
           );
 
           for (let cube of arr) {
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(cube.containerX - cube.containerWidth * 0.1, cube.containerY - cube.containerHeight * 0.1, cube.containerWidth + cube.containerWidth * 0.2, cube.containerHeight + cube.containerHeight * 0.2);
-            ctx.fillStyle = cube.bgcolor;
-            ctx.fillRect(cube.x, cube.y, cube.width, cube.height);
+            if (JSON.stringify(cube) !== JSON.stringify(d)) {
+              ctx.fillStyle = '#fff';
+              ctx.fillRect(cube.containerX - cube.containerWidth * 0.1, cube.containerY - cube.containerHeight * 0.1, cube.containerWidth + cube.containerWidth * 0.2, cube.containerHeight + cube.containerHeight * 0.2);
+              ctx.fillStyle = cube.bgcolor;
+              ctx.fillRect(cube.x, cube.y, cube.width, cube.height);
+            }
           }
 
           ctx.fillStyle = 'transparent';
@@ -168,7 +190,9 @@ if (typeof canvas.transferControlToOffscreen === "function") {
             bug.y = d.containerY;
             drawBug();
 
-            d.bgcolor = '#000';
+            d.eaten = true;
+            d.bgcolor = '#fff';
+            delete d.target;
             eatRandom();
           } else {
             if (bug.y < d.containerY) {
