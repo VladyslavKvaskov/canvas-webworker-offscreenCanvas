@@ -1,5 +1,5 @@
 let canvas = null;
-let ctx = null;
+var ctx = null;
 
 function getRandomColor() {
   const letters = '0123456789ABCDEF';
@@ -11,8 +11,8 @@ function getRandomColor() {
 }
 
 
-let data = [];
-let dataLength = 5001;
+var data = [];
+var dataLength = 50;
 
 for (let i = 1; i <= dataLength; i++) {
   data.push({
@@ -20,6 +20,12 @@ for (let i = 1; i <= dataLength; i++) {
     bgcolor: getRandomColor(),
     _elementId: i
   });
+}
+
+var bug = {
+  x: 0,
+  y: 0,
+  increament: 3
 }
 
 self.onmessage = function(e) {
@@ -46,20 +52,15 @@ self.onmessage = function(e) {
 
 function draw() {
   if (data.length > 0) {
-    ctx.font = '16px Verdana';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#000';
-    ctx.fillText('head', canvas.width / 2 - 20, 15);
-
-    const squareSize = Math.sqrt((canvas.width * (canvas.height - 20)) / dataLength);
+    const squareSize = Math.sqrt((canvas.width * (canvas.height)) / dataLength);
     const rowLength = Math.floor(canvas.width / squareSize);
     const rowCounter = Math.ceil(data.length / rowLength);
     const squareWidth = squareSize + ((canvas.width - rowLength * squareSize) / rowLength);
-    const squareHeight = squareSize + (((canvas.height - 20) - rowCounter * squareSize) / rowCounter);
-
+    const squareHeight = squareSize + (((canvas.height) - rowCounter * squareSize) / rowCounter);
+    bug.increament = squareSize * 0.05;
     let count = 0;
     let x = 0;
-    let y = 20;
+    let y = 0;
 
     for (let i = 0; i < data.length; i++) {
       const d = data[i];
@@ -67,7 +68,17 @@ function draw() {
       ctx.fillRect(x, y, squareWidth, squareHeight);
       ctx.fillStyle = d.bgcolor;
       ctx.fillRect(x + squareWidth * 0.1, y + squareHeight * 0.1, squareWidth - squareWidth * 0.2, squareHeight - squareHeight * 0.2);
-      // ctx.fillRect(x + 0.75, y + 0.75, squareWidth - 1.5, squareHeight - 1.5);
+
+      d.x = x + squareWidth * 0.1;
+      d.y = y + squareHeight * 0.1;
+      d.width = squareWidth - squareWidth * 0.2;
+      d.height = squareHeight - squareHeight * 0.2;
+      d.containerWidth = squareWidth;
+      d.containerHeight = squareHeight;
+      d.containerX = x;
+      d.containerY = y;
+      d.marginX = squareWidth * 0.1;
+      d.marginY = squareHeight * 0.1;
 
       count++;
       if (count === rowLength) {
@@ -78,6 +89,9 @@ function draw() {
         x += squareWidth;
       }
     }
+
+
+    eatRandom(true);
   } else {
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -88,4 +102,84 @@ function draw() {
   }
 }
 
-// ctx.fillRect(x + squareWidth * 0.1, y + squareHeight * 0.1, squareWidth - squareWidth * 0.2, squareHeight - squareHeight * 0.2);
+function eat(d) {
+  if (d) {
+    async function moveBug() {
+
+      d.eaten = true;
+
+      function drawBug() {
+
+        let arr = data.filter(g =>
+          g.y + g.containerHeight > bug.y &&
+          g.x + g.containerWidth > bug.x &&
+          g.y < bug.y + g.containerHeight &&
+          g.x < bug.x + g.containerWidth
+        );
+
+        for (let cube of arr) {
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(cube.containerX - cube.containerWidth * 0.1, cube.containerY - cube.containerHeight * 0.1, cube.containerWidth + cube.containerWidth * 0.2, cube.containerHeight + cube.containerHeight * 0.2);
+          ctx.fillStyle = cube.bgcolor;
+          ctx.fillRect(cube.x, cube.y, cube.width, cube.height);
+        }
+
+        ctx.fillStyle = 'transparent';
+        ctx.fillRect(bug.x, bug.y, d.containerWidth, d.containerHeight);
+
+        ctx.fillStyle = 'black';
+        ctx.fillRect(bug.x + d.containerWidth * 0.1, bug.y + d.containerHeight * 0.1, d.width, d.height);
+      }
+
+      drawBug();
+
+      if (bug.x + bug.increament > d.containerX && bug.x - bug.increament < d.containerX) {
+        bug.x = d.containerX;
+        drawBug();
+        if (bug.y + bug.increament > d.containerY && bug.y - bug.increament < d.containerY) {
+          bug.y = d.containerY;
+          drawBug();
+
+          d.bgcolor = '#000';
+          eatRandom();
+        } else {
+          if (bug.y < d.containerY) {
+            bug.y += bug.increament;
+          } else if (bug.y > d.containerY) {
+            bug.y -= bug.increament;
+          }
+
+          requestAnimationFrame(moveBug);
+        }
+
+
+      } else {
+        if (bug.x < d.containerX) {
+          bug.x += bug.increament;
+        } else if (bug.x > d.containerX) {
+          bug.x -= bug.increament;
+        }
+
+        requestAnimationFrame(moveBug);
+      }
+    }
+
+    moveBug();
+  }
+}
+
+function getRndInteger(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function eatRandom(par = false) {
+  let arrToEat = data.filter(d => !d.hasOwnProperty('eaten'));
+  if (arrToEat.length > 0) {
+    if (par === true) {
+      bug.x = arrToEat[0].containerX;
+      bug.y = arrToEat[0].containerY;
+    }
+
+    eat(arrToEat[getRndInteger(0, arrToEat.length - 1)]);
+  }
+}
