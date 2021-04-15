@@ -12,7 +12,7 @@ function getRandomColor() {
 
 
 var data = [];
-var dataLength = 50;
+var dataLength = 500;
 
 for (let i = 1; i <= dataLength; i++) {
   data.push({
