@@ -1,7 +1,7 @@
 const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
 let timeout;
-canvas.transferControlToOffscreen = '123';
+// canvas.transferControlToOffscreen = '123';
 if (typeof canvas.transferControlToOffscreen === "function") {
   const wCanvas = canvas.transferControlToOffscreen();
   const worker = new Worker('worker.js');
